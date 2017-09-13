@@ -53,7 +53,7 @@ if not skip_detect:
 
     dataset = DataBowl3Detector(testsplit,config1,phase='test',split_comber=split_comber)
     test_loader = DataLoader(dataset,batch_size = 1,
-        shuffle = False,num_workers = 32,pin_memory=False,collate_fn =collate)
+        shuffle = False,num_workers = 16,pin_memory=False,collate_fn =collate)
 
     test_detect(test_loader, nod_net, get_pbb, bbox_result_path,config1,n_gpu=config_submit['n_gpu'])
 
@@ -80,7 +80,7 @@ def test_casenet(model,testset):
         testset,
         batch_size = 1,
         shuffle = False,
-        num_workers = 32,
+        num_workers = 16,
         pin_memory=True)
     #model = model.cuda()
     model.eval()
@@ -103,7 +103,11 @@ config2['datadir'] = prep_result_path
 
 dataset = DataBowl3Classifier(testsplit, config2, phase = 'test')
 predlist = test_casenet(casenet,dataset).T
-anstable = np.concatenate([[testsplit],predlist],0).T
+anstable = None
+try:
+    anstable = np.concatenate([[testsplit],predlist],0).T
+except ValueError:
+    anstable = np.concatenate([[testsplit],[predlist]],0).T
 df = pandas.DataFrame(anstable)
 df.columns={'id','cancer'}
 df.to_csv(filename,index=False)
